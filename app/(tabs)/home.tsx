@@ -31,12 +31,12 @@ class PaymentService {
         throw new Error("Vous devez être connecté");
       }
 
-      console.log("🔄 Initialisation du paiement pour:", session.user.email);
-      console.log("💰 Montant envoyé:", amount, "FCFA");
+      console.log("Initialisation du paiement pour:", session.user.email);
+      console.log(" Montant envoyé:", amount, "FCFA");
 
-      // 🔥 VÉRIFICATION DU MONTANT
+      //  VÉRIFICATION DU MONTANT
       if (amount !== 25) {
-        console.error(`❌ ERREUR: Montant incorrect: ${amount} FCFA`);
+        console.error(`ERREUR: Montant incorrect: ${amount} FCFA`);
         throw new Error(
           `Montant incorrect: ${amount} FCFA. Le prix est de 25 FCFA pour les tests.`
         );
@@ -57,7 +57,7 @@ class PaymentService {
 
       const data = await response.json();
 
-      console.log("📥 Réponse backend:", {
+      console.log(" Réponse backend:", {
         success: data.success,
         message: data.message,
         mode: data.mode,
@@ -66,21 +66,21 @@ class PaymentService {
       });
 
       if (!response.ok) {
-        console.error("❌ Erreur backend:", data);
+        console.error("Erreur backend:", data);
         throw new Error(
           data.message || data.error || "Erreur lors de la création du paiement"
         );
       }
 
       if (!data.data?.authorization_url && !data.data?.checkout_url) {
-        console.error("❌ URL de paiement manquante:", data);
+        console.error("URL de paiement manquante:", data);
         throw new Error("URL de paiement non reçue du serveur");
       }
 
       const paymentUrl =
         data.data?.authorization_url || data.data?.checkout_url;
 
-      console.log("🔗 URL de paiement:", {
+      console.log("URL de paiement:", {
         url_courte: paymentUrl.substring(0, 50) + "...",
         mode: data.mode || "indéterminé",
         reference: data.data?.reference,
@@ -94,7 +94,7 @@ class PaymentService {
         mode: data.mode || (paymentUrl.includes("/test.") ? "test" : "live"),
       };
     } catch (error: any) {
-      console.error("❌ Erreur création paiement:", error);
+      console.error(" Erreur création paiement:", error);
       return {
         success: false,
         message: error.message || "Erreur de connexion au service de paiement",
@@ -104,21 +104,21 @@ class PaymentService {
 
   static async verifyPayment(reference: string) {
     try {
-      console.log(`🔍 Vérification de la référence: ${reference}`);
+      console.log(`Vérification de la référence: ${reference}`);
 
-      // 🔥 GESTION DE LA SESSION
+      // GESTION DE LA SESSION
       let session;
       const { data: sessionData, error: sessionError } =
         await supabase.auth.getSession();
 
       if (sessionError || !sessionData.session) {
-        console.error("❌ Erreur session:", sessionError);
+        console.error("Erreur session:", sessionError);
         
         // Essayer de rafraîchir la session
         const { data: refreshData } = await supabase.auth.refreshSession();
         if (refreshData.session) {
           session = refreshData.session;
-          console.log("✅ Session rafraîchie");
+          console.log("Session rafraîchie");
         } else {
           throw new Error("Session expirée. Veuillez vous reconnecter.");
         }
@@ -126,7 +126,7 @@ class PaymentService {
         session = sessionData.session;
       }
 
-      console.log(`✅ Session valide pour: ${session.user.email}`);
+      console.log(`Session valide pour: ${session.user.email}`);
 
       const response = await fetch(
         `${BACKEND_URL}/api/payments/verify/${reference}`,
@@ -141,7 +141,7 @@ class PaymentService {
 
       const data = await response.json();
 
-      console.log("📥 Réponse vérification:", data);
+      console.log("Réponse vérification:", data);
 
       if (response.ok) {
         if (
@@ -150,9 +150,9 @@ class PaymentService {
           data.status === "terminé" ||
           data.status === "success"
         ) {
-          console.log("✅ Paiement confirmé côté backend");
+          console.log("Paiement confirmé côté backend");
 
-          // 🔥 FORCER LA MISE À JOUR DU PROFIL IMMÉDIATEMENT
+          // FORCER LA MISE À JOUR DU PROFIL IMMÉDIATEMENT
           await this.updateProfileToPremium(session.user.id, reference);
 
           return {
@@ -200,10 +200,10 @@ class PaymentService {
         };
       }
 
-      console.error("❌ Erreur HTTP:", response.status, data);
+      console.error(" Erreur HTTP:", response.status, data);
       throw new Error(data.message || `Erreur ${response.status}`);
     } catch (error: any) {
-      console.error("❌ Erreur vérification paiement:", error);
+      console.error("Erreur vérification paiement:", error);
 
       return {
         success: false,
@@ -215,10 +215,10 @@ class PaymentService {
     }
   }
 
-  // 🔥 NOUVELLE MÉTHODE : METTRE À JOUR LE PROFIL VERS PREMIUM
+  //  NOUVELLE MÉTHODE : METTRE À JOUR LE PROFIL VERS PREMIUM
   static async updateProfileToPremium(userId: string, reference: string) {
     try {
-      console.log(`🔄 Mise à jour du profil vers premium pour: ${userId}`);
+      console.log(`Mise à jour du profil vers premium pour: ${userId}`);
       
       const { error } = await supabase
         .from("profiles")
@@ -231,22 +231,22 @@ class PaymentService {
         .eq("id", userId);
 
       if (error) {
-        console.error("❌ Erreur mise à jour profil:", error);
+        console.error(" Erreur mise à jour profil:", error);
         return { success: false, message: error.message };
       }
 
-      console.log("✅ Profil mis à jour vers premium");
+      console.log("Profil mis à jour vers premium");
       return { success: true, message: "Profil mis à jour" };
     } catch (error: any) {
-      console.error("❌ Erreur mise à jour profil:", error);
+      console.error("Erreur mise à jour profil:", error);
       return { success: false, message: error.message };
     }
   }
 
-  // 🔥 MÉTHODE AMÉLIORÉE : VÉRIFIER ET METTRE À JOUR LE STATUT
+  //  MÉTHODE AMÉLIORÉE : VÉRIFIER ET METTRE À JOUR LE STATUT
   static async checkAndUpdatePremiumStatus(userId: string, reference?: string) {
     try {
-      console.log(`🔍 Vérification et mise à jour pour: ${userId}`);
+      console.log(`Vérification et mise à jour pour: ${userId}`);
       
       // Vérifier d'abord le statut actuel
       const { data: profile, error } = await supabase
@@ -256,7 +256,7 @@ class PaymentService {
         .single();
 
       if (error) {
-        console.error("❌ Erreur vérification profil:", error);
+        console.error(" Erreur vérification profil:", error);
         return { 
           is_premium: false, 
           message: "Erreur vérification profil",
@@ -266,7 +266,7 @@ class PaymentService {
 
       // Si déjà premium, retourner le statut
       if (profile.is_premium) {
-        console.log("✅ Utilisateur déjà premium");
+        console.log("Utilisateur déjà premium");
         return {
           is_premium: true,
           reference: profile.payment_reference,
@@ -278,7 +278,7 @@ class PaymentService {
       // Si non premium mais a une référence de paiement, vérifier avec le backend
       if (reference || profile.payment_reference) {
         const refToCheck = reference || profile.payment_reference;
-        console.log(`🔍 Vérification paiement avec référence: ${refToCheck}`);
+        console.log(`Vérification paiement avec référence: ${refToCheck}`);
         
         const paymentStatus = await this.verifyPayment(refToCheck);
         
@@ -301,7 +301,7 @@ class PaymentService {
         error: false
       };
     } catch (error: any) {
-      console.error("❌ Erreur vérification/mise à jour:", error);
+      console.error("Erreur vérification/mise à jour:", error);
       return {
         is_premium: false,
         message: error.message,
@@ -327,7 +327,7 @@ class PaymentService {
         .single();
 
       if (error) {
-        console.error("❌ Erreur requête profil:", error);
+        console.error("Erreur requête profil:", error);
         return {
           success: false,
           is_premium: false,
@@ -343,7 +343,7 @@ class PaymentService {
         updated_at: profile.updated_at,
       };
     } catch (error: any) {
-      console.error("❌ Erreur vérification statut premium:", error);
+      console.error(" Erreur vérification statut premium:", error);
       return {
         success: false,
         is_premium: false,
@@ -362,7 +362,7 @@ class PaymentService {
         config: data.config,
       };
     } catch (error: any) {
-      console.error("❌ Erreur vérification config:", error);
+      console.error(" Erreur vérification config:", error);
       return {
         success: false,
         config: null,
@@ -370,11 +370,11 @@ class PaymentService {
     }
   }
 
-  // 🔥 FORCER L'ACTIVATION DIRECTE
+  //  FORCER L'ACTIVATION DIRECTE
   static async forcePremiumActivation(userId: string, reference: string) {
     try {
       console.log(
-        `🔧 Activation manuelle pour: ${userId}, référence: ${reference}`
+        ` Activation manuelle pour: ${userId}, référence: ${reference}`
       );
 
       // Mettre à jour directement dans Supabase
@@ -397,7 +397,7 @@ class PaymentService {
         message: "Activation forcée réussie - Compte premium activé",
       };
     } catch (error: any) {
-      console.error("❌ Erreur activation forcée:", error);
+      console.error(" Erreur activation forcée:", error);
       return {
         success: false,
         message: error.message,
@@ -506,12 +506,12 @@ export default function HomeScreen() {
     // VÉRIFICATION PÉRIODIQUE AUTOMATIQUE
     const interval = setInterval(async () => {
       if (user && !isPremium) {
-        console.log("🔄 Vérification périodique du statut premium...");
+        console.log("Vérification périodique du statut premium...");
 
         const status = await PaymentService.checkAndUpdatePremiumStatus(user.id);
 
         if (status.is_premium && !status.error) {
-          console.log("✅ Statut premium détecté automatiquement");
+          console.log("Statut premium détecté automatiquement");
           setIsPremium(true);
 
           // Mettre à jour les données
@@ -529,7 +529,7 @@ export default function HomeScreen() {
           if (showNotchPayWebview) {
             setShowNotchPayWebview(false);
             Alert.alert(
-              "🎉 Succès !",
+              "Succès !",
               "Votre compte premium a été activé automatiquement.",
               [
                 {
@@ -581,7 +581,7 @@ export default function HomeScreen() {
       const result = await PaymentService.checkBackendConfig();
       if (result.success && result.config) {
         setBackendMode(result.config.mode);
-        console.log(`🔧 Mode backend: ${result.config.mode}`);
+        console.log(`Mode backend: ${result.config.mode}`);
       }
     };
 
@@ -599,7 +599,7 @@ export default function HomeScreen() {
     if (!user) return;
 
     try {
-      console.log("🔄 Rafraîchissement des données utilisateur...");
+      console.log("Rafraîchissement des données utilisateur...");
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")
@@ -634,7 +634,7 @@ export default function HomeScreen() {
         {
           text: "Accéder au contenu",
           onPress: () => {
-            console.log("✅ Redirection vers /cultures-premium");
+            console.log("Redirection vers /cultures-premium");
             router.push("/cultures-premium");
             setShowNotchPayWebview(false);
           },
@@ -652,17 +652,17 @@ export default function HomeScreen() {
     setCheckingPayment(true);
 
     try {
-      console.log(`🔍 Vérification (${verificationCount + 1}/15):`, reference);
+      console.log(`Vérification (${verificationCount + 1}/15):`, reference);
 
       const paymentStatus = await PaymentService.verifyPayment(reference);
 
-      console.log("📊 Statut du paiement:", paymentStatus);
+      console.log(" Statut du paiement:", paymentStatus);
 
       const newCount = verificationCount + 1;
       setVerificationCount(newCount);
 
       if (newCount >= 15) {
-        console.log("⏰ Limite de vérifications atteinte");
+        console.log("Limite de vérifications atteinte");
 
         Alert.alert(
           "Information",
@@ -678,10 +678,10 @@ export default function HomeScreen() {
       }
 
       if (paymentStatus.success && paymentStatus.paid) {
-        console.log("✅ Paiement réussi détecté");
+        console.log("Paiement réussi détecté");
         await handlePaymentSuccess();
       } else if (paymentStatus.success && paymentStatus.pending) {
-        console.log(`⏳ En attente (${newCount}/15)`);
+        console.log(`En attente (${newCount}/15)`);
 
         if (!isManualCheck) {
           setTimeout(() => {
@@ -701,7 +701,7 @@ export default function HomeScreen() {
         );
       }
     } catch (error: any) {
-      console.error("❌ Erreur vérification:", error);
+      console.error("Erreur vérification:", error);
 
       if (!isManualCheck && verificationCount < 14) {
         setTimeout(() => {
@@ -731,7 +731,7 @@ export default function HomeScreen() {
       );
 
       if (result.success) {
-        Alert.alert("✅ Succès", result.message, [
+        Alert.alert("Succès", result.message, [
           {
             text: "OK",
             onPress: async () => {
@@ -742,10 +742,10 @@ export default function HomeScreen() {
           },
         ]);
       } else {
-        Alert.alert("❌ Erreur", result.message);
+        Alert.alert("Erreur", result.message);
       }
     } catch (error: any) {
-      Alert.alert("❌ Erreur", error.message || "Une erreur est survenue");
+      Alert.alert("Erreur", error.message || "Une erreur est survenue");
     } finally {
       setForceActivationLoading(false);
     }
@@ -800,14 +800,14 @@ export default function HomeScreen() {
     setProcessingPayment(true);
 
     try {
-      console.log("🔄 Initialisation d'un paiement de 25 FCFA");
+      console.log("Initialisation d'un paiement de 25 FCFA");
 
       const paymentResult = await PaymentService.createPayment(
         25,
         "Abonnement Premium TEST Kamerun News (25 FCFA)"
       );
 
-      console.log("📦 Résultat création:", paymentResult);
+      console.log(" Résultat création:", paymentResult);
 
       if (paymentResult.success && paymentResult.authorization_url) {
         setCurrentTransaction(paymentResult.reference || "");
@@ -829,7 +829,7 @@ export default function HomeScreen() {
         );
       }
     } catch (error: any) {
-      console.error("❌ Erreur initiation paiement:", error);
+      console.error(" Erreur initiation paiement:", error);
       Alert.alert("Erreur", error.message || "Une erreur est survenue");
     } finally {
       setProcessingPayment(false);
@@ -846,14 +846,14 @@ export default function HomeScreen() {
     if (!user) return;
 
     try {
-      console.log("🔍 Vérification immédiate du statut premium...");
+      console.log("Vérification immédiate du statut premium...");
       const status = await PaymentService.checkAndUpdatePremiumStatus(user.id);
 
       if (status.is_premium && !status.error) {
         setIsPremium(true);
         await refreshUserData();
         Alert.alert(
-          "✅ Succès",
+          "Succès",
           "Votre compte premium est maintenant activé !",
           [
             {
@@ -869,7 +869,7 @@ export default function HomeScreen() {
         );
       }
     } catch (error) {
-      console.error("❌ Erreur vérification:", error);
+      console.error("Erreur vérification:", error);
     }
   };
 
@@ -953,7 +953,7 @@ export default function HomeScreen() {
           source={{ uri: notchPayUrl }}
           style={{ flex: 1 }}
           onNavigationStateChange={(navState) => {
-            console.log("🌐 Navigation WebView:", navState.url);
+            console.log(" Navigation WebView:", navState.url);
 
             const isPaymentCompleted =
               navState.url.includes("/success") ||
@@ -962,7 +962,7 @@ export default function HomeScreen() {
               navState.url.includes("/return");
 
             if (isPaymentCompleted) {
-              console.log("✅ Redirection après paiement détectée");
+              console.log(" Redirection après paiement détectée");
               setShowNotchPayWebview(false);
 
               // Vérifier immédiatement le statut
@@ -974,7 +974,7 @@ export default function HomeScreen() {
             }
           }}
           onError={(error) => {
-            console.error("❌ Erreur WebView:", error);
+            console.error("Erreur WebView:", error);
             Alert.alert(
               "Erreur",
               "Impossible de charger la page de paiement.",
@@ -985,8 +985,8 @@ export default function HomeScreen() {
         <View style={styles.webviewFooter}>
           <Text style={styles.webviewFooterText}>
             {backendMode === "TEST"
-              ? '⚠️ Mode TEST : Paiement de test à 25 FCFA. Cliquez sur "Simuler le paiement" dans la page NotchPay.'
-              : "💳 Paiement LIVE : Vous allez être redirigé vers la page de paiement sécurisée."}
+              ? 'Mode TEST : Paiement de test à 25 FCFA. Cliquez sur "Simuler le paiement" dans la page NotchPay.'
+              : "Paiement LIVE : Vous allez être redirigé vers la page de paiement sécurisée."}
           </Text>
           {currentTransaction && (
             <View style={styles.verificationContainer}>
@@ -1217,13 +1217,13 @@ export default function HomeScreen() {
                 </Text>
                 <View style={styles.paymentMethodsIcons}>
                   <Text style={styles.paymentMethodPreview}>
-                    📱 MTN Mobile Money
+                    MTN Mobile Money
                   </Text>
                   <Text style={styles.paymentMethodPreview}>
-                    🍊 Orange Money
+                    Orange Money
                   </Text>
                   <Text style={styles.paymentMethodPreview}>
-                    💳 Carte bancaire
+                    Carte bancaire
                   </Text>
                 </View>
               </View>
@@ -1268,7 +1268,7 @@ export default function HomeScreen() {
               <TouchableOpacity
                 style={styles.paymentButton}
                 onPress={() => {
-                  console.log("🎯 Navigation vers cultures premium");
+                  console.log(" Navigation vers cultures premium");
                   router.push("/cultures-premium");
                 }}
               >
