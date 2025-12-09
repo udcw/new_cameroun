@@ -18,7 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { WebView } from "react-native-webview";
 
-const BACKEND_URL = "https://severbackendnotchpay.onrender.com";
+const BACKEND_URL = "https://severbackendnotchpay-1.onrender.com";
 
 class PaymentService {
   static async createPayment(amount: number, description: string) {
@@ -609,19 +609,19 @@ export default function HomeScreen() {
       if (!error && profile) {
         setUserData(profile);
         setIsPremium(profile.is_premium);
-        console.log("✅ Données utilisateur rafraîchies:", {
+        console.log("Données utilisateur rafraîchies:", {
           is_premium: profile.is_premium,
           last_payment_date: profile.last_payment_date,
           reference: profile.payment_reference,
         });
       }
     } catch (error) {
-      console.error("❌ Erreur rafraîchissement:", error);
+      console.error(" Erreur rafraîchissement:", error);
     }
   };
 
   const handlePaymentSuccess = async () => {
-    console.log("✅ handlePaymentSuccess appelé");
+    console.log("handlePaymentSuccess appelé");
 
     // Mettre à jour les données immédiatement
     await refreshUserData();
